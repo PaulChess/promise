@@ -9,22 +9,30 @@ function sPromise (executor) {
   this.onrejectedFunc = Function.prototype;
 
   const resolve = (value) => {
-    /** only when previous status was pending can change status */
-    if (this.status === 'pending') {
-      this.value = value;
-      this.status = 'fulfilled';
-      // execute passed onfulfilledFunc
-      this.onfulfilledFunc(this.value);
+    if (value instanceof Promise) {
+      return value.then(resolve, reject);
     }
+    // in order to ensure task is microtask
+    setTimeout(() => {
+      /** only when previous status was pending can change status */
+      if (this.status === 'pending') {
+        this.value = value;
+        this.status = 'fulfilled';
+        // execute passed onfulfilledFunc
+        this.onfulfilledFunc(this.value);
+      }      
+    })
   }
 
   const reject = (reason) => {
-    if (this.status === 'pending') {
-      this.reason = reason;
-      this.status = 'rejected';
-      // execute passed onrejectedFunc
-      this.onrejectedFunc(this.reason);
-    }
+    setTimeout(() => {
+      if (this.status === 'pending') {
+        this.reason = reason;
+        this.status = 'rejected';
+        // execute passed onrejectedFunc
+        this.onrejectedFunc(this.reason);
+      }  
+    })
   }
 
   executor(resolve, reject);
@@ -43,17 +51,17 @@ sPromise.prototype.then = function (onfulfilled, onrejected) {
   }
   // save func
   if (this.status === 'pending') {
-    console.log('executing pending');
     this.onfulfilledFunc = onfulfilled;
     this.onrejectedFunc = onrejected;
   }
 }
 
+
+// test
 const promiseTest = new sPromise((resolve, reject) => {
-  setTimeout(() => {
-    resolve('data');
-  }, 2000);
+  resolve('data')
 })
 promiseTest.then(data => {
   console.log(data);
 })
+console.log(1);
