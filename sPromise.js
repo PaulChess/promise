@@ -5,8 +5,8 @@ function sPromise (executor) {
   this.status = 'pending'; // pending / fulfilled / rejected
   this.value = null;
   this.reason = null;
-  this.onfulfilledFunc = Function.prototype; // used to save async func
-  this.onrejectedFunc = Function.prototype;
+  this.onfulfilledFuncArray = [];
+  this.onrejectedFuncArray = [];
 
   const resolve = (value) => {
     if (value instanceof Promise) {
@@ -19,8 +19,10 @@ function sPromise (executor) {
         this.value = value;
         this.status = 'fulfilled';
         // execute passed onfulfilledFunc
-        this.onfulfilledFunc(this.value);
-      }      
+        this.onfulfilledFuncArray.forEach(func => {
+          func(value);
+        })
+      }
     })
   }
 
@@ -30,38 +32,51 @@ function sPromise (executor) {
         this.reason = reason;
         this.status = 'rejected';
         // execute passed onrejectedFunc
-        this.onrejectedFunc(this.reason);
+        this.onrejectedFuncArray.forEach(func => {
+          func(reason);
+        })
       }  
     })
   }
 
-  executor(resolve, reject);
+  try {
+    executor(resolve, reject);
+  } catch(e) {
+    reject(e);
+  }
 }
 
 
 sPromise.prototype.then = function (onfulfilled, onrejected) {
   onfulfilled = typeof onfulfilled === 'function' ? onfulfilled : data => data;
   onrejected = typeof onrejected === 'function' ? onrejected : error => { throw error };
-
+  // only when status changed to fulfilled can be executed
   if (this.status === 'fulfilled') {
     onfulfilled(this.value);
   }
+  // only when status changed to rejected can be executed
   if (this.status === 'rejected') {
     onrejected(this.reason);
   }
   // save func
   if (this.status === 'pending') {
-    this.onfulfilledFunc = onfulfilled;
-    this.onrejectedFunc = onrejected;
+    this.onfulfilledFuncArray.push(onfulfilled);
+    this.onrejectedFuncArray.push(onrejected);
   }
 }
 
 
 // test
+// when new Promise, you passed executor
+// function then passed is what you want to do when success or failed
 const promiseTest = new sPromise((resolve, reject) => {
-  resolve('data')
+  setTimeout(() => {
+    resolve('data')
+  }, 2000)
 })
 promiseTest.then(data => {
-  console.log(data);
+  console.log('1' + data);
 })
-console.log(1);
+promiseTest.then(data => {
+  console.log('2' + data);
+})
