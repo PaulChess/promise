@@ -1,7 +1,8 @@
 # promise
 ### 补充知识点：任务队列
-1. 宏任务和微任务
-一般情况下, 宏任务(macroTask)包括以下内容:
+1. 宏任务和微任务  
+   
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;一般情况下, 宏任务(macroTask)包括以下内容:
 * setTimeout
 * setInterval
 * I/O
@@ -9,8 +10,9 @@
 * postMessage
 * setImmediate(Node.js中的特性，浏览器端已放弃此api)
 * requestAnimationFrame
-* UI渲染
-微任务(microTask)包括以下内容:
+* UI渲染  
+  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;微任务(microTask)包括以下内容:  
 * Promise.then
 * mutationObserver
 * process.nextTick
