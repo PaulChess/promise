@@ -52,16 +52,50 @@ sPromise.prototype.then = function (onfulfilled, onrejected) {
   onrejected = typeof onrejected === 'function' ? onrejected : error => { throw error };
   // only when status changed to fulfilled can be executed
   if (this.status === 'fulfilled') {
-    onfulfilled(this.value);
+    return new sPromise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          const result = onfulfilled(this.value);
+          resolve(result);
+        } catch (e) {
+          reject(e);
+        }
+      })
+    }) 
   }
   // only when status changed to rejected can be executed
   if (this.status === 'rejected') {
-    onrejected(this.reason);
+    return new sPromise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          const result = onrejected(this.reason);
+          resolve(result);
+        } catch (e) {
+          reject(e);
+        }
+      })
+    })
   }
   // save func
   if (this.status === 'pending') {
-    this.onfulfilledFuncArray.push(onfulfilled);
-    this.onrejectedFuncArray.push(onrejected);
+    return new sPromise((resolve, reject) => {
+      this.onfulfilledFuncArray.push(() => {
+        try {
+          let result = onfulfilled(this.value);
+          resolve(result);
+        } catch (e) {
+          reject(e);
+        }
+      })
+      this.onrejectedFuncArray.push(() => {
+        try {
+          let result = onrejected(this.reason);
+          resolve(result);
+        } catch (e) {
+          reject(e);
+        }
+      })
+    })
   }
 }
 
@@ -74,9 +108,21 @@ const promiseTest = new sPromise((resolve, reject) => {
     resolve('data')
   }, 2000)
 })
+// promiseTest.then(data => {
+//   console.log('1' + data);
+// })
+// promiseTest.then(data => {
+//   console.log('2' + data);
+// })
+
 promiseTest.then(data => {
-  console.log('1' + data);
+  console.log(data);
+  return new sPromise((resolve, reject) => {
+    setTimeout(() => {
+      resolve('hhh');
+    }, 4000);
+  })
 })
-promiseTest.then(data => {
-  console.log('2' + data);
+.then(data => {
+  console.log(data);
 })
