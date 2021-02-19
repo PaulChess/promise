@@ -13,6 +13,7 @@ function sPromise (executor) {
       return value.then(resolve, reject);
     }
     // in order to ensure task is microtask
+    // 加setTimeout的目的是为了让主线程的任务和微任务跑完再执行宏任务
     setTimeout(() => {
       /** only when previous status was pending can change status */
       if (this.status === 'pending') {
@@ -52,10 +53,13 @@ sPromise.prototype.then = function (onfulfilled, onrejected) {
   onrejected = typeof onrejected === 'function' ? onrejected : error => { throw error };
   // only when status changed to fulfilled can be executed
   if (this.status === 'fulfilled') {
+    console.log('fulfilled');
     return new sPromise((resolve, reject) => {
       setTimeout(() => {
         try {
           const result = onfulfilled(this.value);
+          console.log('result');
+          console.log(result);
           resolve(result);
         } catch (e) {
           reject(e);
@@ -78,24 +82,8 @@ sPromise.prototype.then = function (onfulfilled, onrejected) {
   }
   // save func
   if (this.status === 'pending') {
-    return new sPromise((resolve, reject) => {
-      this.onfulfilledFuncArray.push(() => {
-        try {
-          let result = onfulfilled(this.value);
-          resolve(result);
-        } catch (e) {
-          reject(e);
-        }
-      })
-      this.onrejectedFuncArray.push(() => {
-        try {
-          let result = onrejected(this.reason);
-          resolve(result);
-        } catch (e) {
-          reject(e);
-        }
-      })
-    })
+    this.onfulfilledFuncArray.push(onfulfilled);
+    this.onrejectedFuncArray.push(onrejected);
   }
 }
 
@@ -103,26 +91,14 @@ sPromise.prototype.then = function (onfulfilled, onrejected) {
 // test
 // when new Promise, you passed executor
 // function then passed is what you want to do when success or failed
-const promiseTest = new sPromise((resolve, reject) => {
+const promise = new sPromise((resolve, reject) => {
   setTimeout(() => {
-    resolve('data')
-  }, 2000)
+    resolve('lucas');
+  }, 2000);
 })
-// promiseTest.then(data => {
-//   console.log('1' + data);
-// })
-// promiseTest.then(data => {
-//   console.log('2' + data);
-// })
-
-promiseTest.then(data => {
-  console.log(data);
-  return new sPromise((resolve, reject) => {
-    setTimeout(() => {
-      resolve('hhh');
-    }, 4000);
-  })
+promise.then(data => {
+  console.log('1' + data);
 })
-.then(data => {
-  console.log(data);
+promise.then(data => {
+  console.log('2' + data);
 })
