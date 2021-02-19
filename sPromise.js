@@ -51,40 +51,19 @@ function sPromise (executor) {
 sPromise.prototype.then = function (onfulfilled, onrejected) {
   onfulfilled = typeof onfulfilled === 'function' ? onfulfilled : data => data;
   onrejected = typeof onrejected === 'function' ? onrejected : error => { throw error };
-  // only when status changed to fulfilled can be executed
-  if (this.status === 'fulfilled') {
-    console.log('fulfilled');
-    return new sPromise((resolve, reject) => {
-      setTimeout(() => {
-        try {
-          const result = onfulfilled(this.value);
-          console.log('result');
-          console.log(result);
-          resolve(result);
-        } catch (e) {
-          reject(e);
-        }
-      })
-    }) 
-  }
-  // only when status changed to rejected can be executed
-  if (this.status === 'rejected') {
-    return new sPromise((resolve, reject) => {
-      setTimeout(() => {
-        try {
-          const result = onrejected(this.reason);
-          resolve(result);
-        } catch (e) {
-          reject(e);
-        }
-      })
-    })
-  }
-  // save func
-  if (this.status === 'pending') {
-    this.onfulfilledFuncArray.push(onfulfilled);
-    this.onrejectedFuncArray.push(onrejected);
-  }
+  let promise2 = new sPromise((resolve, reject) => {
+    if (this.status === 'fulfilled') {
+      console.log('onfulfilled');
+    }
+    if (this.status === 'rejected') {
+      console.log('onrejected');
+    }
+    if (this.status === 'pending') {
+      this.onfulfilledFuncArray.push(onfulfilled);
+      this.onrejectedFuncArray.push(onrejected);
+    }
+  })
+  return promise2;
 }
 
 
@@ -97,8 +76,5 @@ const promise = new sPromise((resolve, reject) => {
   }, 2000);
 })
 promise.then(data => {
-  console.log('1' + data);
-})
-promise.then(data => {
-  console.log('2' + data);
+  console.log(data);
 })
