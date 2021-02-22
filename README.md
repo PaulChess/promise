@@ -16,7 +16,7 @@
 * Promise.then
 * mutationObserver
 * process.nextTick
-<code>每次主线程执行栈为空的时候，引擎都会优先处理微任务队列，处理完微任务队列中的所有任务再处理宏任务。</code>
+<code>每次主线程(同步任务)执行栈为空的时候，引擎都会优先处理微任务队列，处理完微任务队列中的所有任务再处理宏任务。</code>
 ```javascript
 // 🌰 1:
 console.log('start here');
@@ -110,4 +110,78 @@ console.log('end here');
 // second promise
 // second promise then
 // anther first promise then
+```
+
+
+### 补充知识点: setTimeout相关考察
+开胃菜🌰
+```javascript
+setTimeout(() => {
+  console.log('setTimeout block')
+}, 100)
+
+while(true) {
+
+}
+
+console.log('end here)
+
+// 结果: 无任何输出
+// 因为while循环一直占用主线程
+```
+
+```javascript
+setTimeout(() => {
+  while(true) {
+
+  }
+}, 0);
+console.log('end here);
+
+// 输出: end here
+```
+同步任务和异步任务:
+* 同步任务: 当前主任务要消化执行的任务，这些任务一起形成执行栈(execution context stack)
+* 异步任务: 不进入主线程，而是进入任务队列(task queue), 等待执行: 包括<code>微任务</code>、<code>宏任务</code>
+
+例题1 🌰:
+```javascript
+const t1 = new Date();
+setTimeout(() => {
+  const t3 = new Date();
+  console.log('setTimeout block');
+  console.log('t3 - t1', t3 - t1);
+}, 100);
+
+let t2 = new Date();
+
+while(t2 - t1 < 200) {
+  t2 = new Date();
+} // 执行200ms
+
+console.log('end here')
+
+// 步骤1: 执行t1
+// 步骤2: 将setTimeout里面的函数丢到task queue中
+// 步骤3: 执行200ms的t2 = new Date
+// 输出 end here
+// 输出 setTimeout block
+// 输出t3 - t1 = 200 !!!
+```
+
+例题2 🌰: 最小延迟时间
+```javascript
+setTimeout(() => {
+  console.log('here 100');
+}, 1);
+
+setTimeout(() => {
+  console.log('here 2');
+}, 0);
+
+// 最小延迟时间:
+// 这两个setTimeout谁先进入任务队列，谁就会先执行，没有严格1ms和0ms的区分
+// 在1ms以内的定时都以最小延迟时间处理。此时，谁在代码顺序上考前，谁就会在主线程空闲时优先执行。
+// NDN上给出的最小延迟时间4ms。这些都依赖于规范的制定和浏览器的实现。
+// 这个只需了解概念，不用钻牛角尖🐂
 ```
